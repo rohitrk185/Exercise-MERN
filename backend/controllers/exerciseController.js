@@ -12,7 +12,7 @@ const getExercises = asyncHandler (async (req, res) => {
     const user = await User.findOne({ _id: req.user._id })
         .select('-password')
         .populate('exercises');
-    res.status(200).json(user);
+    res.status(200).json(user.exercises);
 });
 
 
