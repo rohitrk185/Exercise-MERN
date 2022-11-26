@@ -9,9 +9,10 @@ const User = require('../models/userModel');
 // @route   -> GET '/api/exercises'
 // @access  -> Private
 const getExercises = asyncHandler (async (req, res) => {
-    const user = await User.find({ _id: req.user._id })
+    const user = await User.findOne({ _id: req.user._id })
+        .select('-password')
         .populate('exercises');
-    res.status(200).json(user.exercises);
+    res.status(200).json(user);
 });
 
 
@@ -25,6 +26,7 @@ const addExercise = asyncHandler (async (req, res) => {
         equipment, gifUrl,
     } = req.body;
     
+    // console.log(req.body);
     if(!name || !exerciseId || !target || !bodyPart || !equipment || !gifUrl ) {
         res.status(400)
         throw new Error('Please Add All Data');
@@ -32,7 +34,7 @@ const addExercise = asyncHandler (async (req, res) => {
 
     const user = req.user;
 
-    let exercise = await Exercise.find({ exerciseId, });
+    let exercise = await Exercise.findOne({ exerciseId, });
     if(!exercise) {
         exercise = await Exercise.create({
             name, exerciseId,
@@ -40,10 +42,14 @@ const addExercise = asyncHandler (async (req, res) => {
             equipment, gifUrl,
         });
     }
-    user.exercises.push(exercise._id);
+    const isPresent = user.exercises.includes(exercise._id);
+    if(!isPresent) {
+        user.exercises.push(exercise._id);
+    }
     await user.save();
 
-    res.status(200).json(exercise);
+    console.log(exercise);
+    res.status(200).json({ exercise, user });
 });
 
 
@@ -52,7 +58,7 @@ const addExercise = asyncHandler (async (req, res) => {
 // @access  -> Private
 const deleteExercise = asyncHandler (async (req, res) => {
     const exerciseId = req.params.id.toString();
-    const exercise = await Exercise.find({ exerciseId, });
+    const exercise = await Exercise.findOne({ exerciseId, });
     if(!exercise) {
         res.status(400);
         throw new Error('Exercise not found');
@@ -65,8 +71,10 @@ const deleteExercise = asyncHandler (async (req, res) => {
     }
 
     const user = req.user;
-    user.exercises.filter((exercise) => exercise.exerciseId !== exerciseId);
 
+    // const id = exercise.id;
+    user.exercises.pull(exercise._id);
+    console.log(user);
     await user.save();
 
     res.status(200).json({ user, exerciseId });
