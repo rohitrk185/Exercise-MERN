@@ -10,7 +10,7 @@ const User = require('../models/userModel');
 // @route  -> POST '/api/users'
 // @access -> Public
 const registerUser = asyncHandler(async (req, res) => {
-    const {name, email, password} = req.body;
+    const { name, email, password } = req.body;
     // Check for all fields in body
     if(!name || !email || !password) {
         res.status(400);
@@ -86,16 +86,16 @@ const getMe = asyncHandler(async (req, res) => {
 // @desc   -> Add Exercise to User Exercise List
 // @route  -> PATCH '/api/users/addExercise/:id'
 // @access -> Private
-const addExercise = asyncHandler(async (req, res) => {
-    const id = req.params.id;
-    // Check for user
-    if(!req.user) {
-        res.status(401);
-        throw new Error('User not found');
-    }
+// const addExercise = asyncHandler(async (req, res) => {
+//     const id = req.params.id;
+//     // Check for user
+//     if(!req.user) {
+//         res.status(401);
+//         throw new Error('User not found');
+//     }
 
-    const user = await User.findById(req.user._id);
-});
+//     const user = await User.findById(req.user._id);
+// });
 
 
 
