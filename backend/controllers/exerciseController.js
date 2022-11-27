@@ -12,28 +12,38 @@ const getExercises = asyncHandler (async (req, res) => {
     const user = await User.findOne({ _id: req.user._id })
         .select('-password')
         .populate('exercises');
-    res.status(200).json(user.exercises);
+        
+    res.status(200).json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        exercises: user.exercises,
+    });
 });
 
 
-// @desc    -> Add Exercise
+// @desc    -> Toggle Exercise from user
 // @route   -> POST '/api/exercises'
 // @access  -> Private
-const addExercise = asyncHandler (async (req, res) => {
+const toggleExercise = asyncHandler (async (req, res) => {
     const { 
         name, exerciseId, 
         target, bodyPart, 
         equipment, gifUrl,
     } = req.body;
     
-    // console.log(req.body);
     if(!name || !exerciseId || !target || !bodyPart || !equipment || !gifUrl ) {
         res.status(400)
         throw new Error('Please Add All Data');
     }
 
-    const user = req.user;
-
+    // Check for user
+    if(!req.user) {
+        res.status(401);
+        throw new Error('User not found');
+    }
+    const user = await User.findOne({ email: req.user.email, });
+    
     let exercise = await Exercise.findOne({ exerciseId, });
     if(!exercise) {
         exercise = await Exercise.create({
@@ -42,48 +52,25 @@ const addExercise = asyncHandler (async (req, res) => {
             equipment, gifUrl,
         });
     }
+
     const isPresent = user.exercises.includes(exercise._id);
     if(!isPresent) {
         user.exercises.push(exercise._id);
+
+    } else {
+        user.exercises.pull(exercise._id);
     }
     await user.save();
-
-    console.log(exercise);
-    res.status(200).json({ exercise, user });
-});
-
-
-// @desc    -> Delete Exercise from user
-// @route   -> DELETE '/api/exercises/:id'
-// @access  -> Private
-const deleteExercise = asyncHandler (async (req, res) => {
-    const exerciseId = req.params.id.toString();
-    const exercise = await Exercise.findOne({ exerciseId, });
-    if(!exercise) {
-        res.status(400);
-        throw new Error('Exercise not found');
-    }
-
-    // Check for user
-    if(!req.user) {
-        res.status(401);
-        throw new Error('User not found');
-    }
-
-    const user = req.user;
-
-    // const id = exercise.id;
-    user.exercises.pull(exercise._id);
     console.log(user);
-    await user.save();
 
-    res.status(200).json({ user, exerciseId });
+    res.status(200).json({
+        exercises: user.exercises,
+    });
 });
 
 
 
 module.exports = {
     getExercises,
-    addExercise,
-    deleteExercise,
+    toggleExercise,
 };
