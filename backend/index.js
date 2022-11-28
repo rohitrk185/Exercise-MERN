@@ -14,7 +14,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-    origin: ['http://localhost:3000',],
+    origin: ['http://localhost:3000', 'http://192.168.113.1:3000'],
 }));
 
 connectDB();
