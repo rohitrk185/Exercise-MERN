@@ -58,13 +58,21 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Check for user-email
     const user = await User.findOne({ email });
-    
+    await user.populate('exercises');
+    // console.log(user.exercises);
+
+    let exercises = [];
+    for(let i = 0; i < user.exercises.length; ++i) {
+        exercises.push(user.exercises[i].exerciseId);
+    }
+
+    // console.log(exercises);
     if(user && (await bcrypt.compare(password, user.password))) {
         res.status(201).json({
             _id: user.id,
             name: user.name,
             email,
-            exercises: user.exercises,
+            exercises,
             token: generateToken(user._id),
         });
     } else{

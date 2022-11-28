@@ -12,7 +12,11 @@ const getExercises = asyncHandler (async (req, res) => {
     const user = await User.findOne({ _id: req.user._id })
         .select('-password')
         .populate('exercises');
-        
+    
+    // for(let i = 0; i < user.exercises.length; ++i) {
+    //     user.exercises[i] = user.exercises[i].exerciseId;
+    // }
+
     res.status(200).json({
         _id: user.id,
         name: user.name,
@@ -56,15 +60,20 @@ const toggleExercise = asyncHandler (async (req, res) => {
     const isPresent = user.exercises.includes(exercise._id);
     if(!isPresent) {
         user.exercises.push(exercise._id);
-
     } else {
         user.exercises.pull(exercise._id);
     }
     await user.save();
-    console.log(user);
+    // console.log(user);
+
+    await user.populate('exercises');
+    let exercises = [];
+    for(let i = 0; i < user.exercises.length; ++i) {
+        exercises.push(user.exercises[i].exerciseId);
+    }
 
     res.status(200).json({
-        exercises: user.exercises,
+        exercises: exercises,
     });
 });
 
