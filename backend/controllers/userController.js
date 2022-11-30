@@ -42,6 +42,9 @@ const registerUser = asyncHandler(async (req, res) => {
             name: user.name,
             email: user.email,
             token: generateToken(user._id),
+            lastVisited: user.lastVisited,
+            curStreak: user.curStreak,
+            prevBestStreak: user.prevBestStreak,
         });
     } else {
         res.status(400);
@@ -58,22 +61,35 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Check for user-email
     const user = await User.findOne({ email });
-    await user.populate('exercises');
-    // console.log(user.exercises);
-
-    let exercises = [];
-    for(let i = 0; i < user.exercises.length; ++i) {
-        exercises.push(user.exercises[i].exerciseId);
-    }
-
-    // console.log(exercises);
     if(user && (await bcrypt.compare(password, user.password))) {
+        await user.populate('exercises');
+        let exercises = [];
+        for(let i = 0; i < user.exercises.length; ++i) {
+            exercises.push(user.exercises[i].exerciseId);
+        }
+
+        const today = new Date();
+        if((user.lastVisited == null) || (today.getDate() === (user.lastVisited.getDate() + 1))) {
+            user.lastVisited = today;
+            user.curStreak += 1;
+            if(user.curStreak > user.prevBestStreak) {
+                user.prevBestStreak = user.curStreak;
+            }
+        } else if(today.getDate() !== user.lastVisited.getDate()){
+            user.lastVisited = today;
+            user.curStreak = 1;
+        }
+        await user.save();
+
         res.status(201).json({
             _id: user.id,
             name: user.name,
             email,
             exercises,
             token: generateToken(user._id),
+            lastVisited: user.lastVisited,
+            curStreak: user.curStreak,
+            prevBestStreak: user.prevBestStreak,
         });
     } else{
         res.status(400);

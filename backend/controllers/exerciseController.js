@@ -10,12 +10,23 @@ const User = require('../models/userModel');
 // @access  -> Private
 const getExercises = asyncHandler (async (req, res) => {
     const user = await User.findOne({ _id: req.user._id })
-        .select('-password')
         .populate('exercises');
     
     // for(let i = 0; i < user.exercises.length; ++i) {
     //     user.exercises[i] = user.exercises[i].exerciseId;
     // }
+    const today = new Date();
+    if((user.lastVisited == null) || (today.getDate() === (user.lastVisited.getDate() + 1))) {
+        user.lastVisited = today;
+        user.curStreak += 1;
+        if(user.curStreak > user.prevBestStreak) {
+            user.prevBestStreak = user.curStreak;
+        }
+    } else if(today.getDate() !== user.lastVisited.getDate()){
+        user.lastVisited = today;
+        user.curStreak = 1;
+    }
+    await user.save();
 
     res.status(200).json({
         exercises: user.exercises,
@@ -59,6 +70,18 @@ const toggleExercise = asyncHandler (async (req, res) => {
         user.exercises.push(exercise._id);
     } else {
         user.exercises.pull(exercise._id);
+    }
+
+    const today = new Date();
+    if((user.lastVisited == null) || (today.getDate() === (user.lastVisited.getDate() + 1))) {
+        user.lastVisited = today;
+        user.curStreak += 1;
+        if(user.curStreak > user.prevBestStreak) {
+            user.prevBestStreak = user.curStreak;
+        }
+    } else if(today.getDate() !== user.lastVisited.getDate()){
+        user.lastVisited = today;
+        user.curStreak = 1;
     }
     await user.save();
     // console.log(user);

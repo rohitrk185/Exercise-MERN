@@ -16,8 +16,20 @@ const userSchema = mongoose.Schema({
     },
     exercises:[{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Exercise'
-    }]
+        ref: 'Exercise',
+    }],
+    lastVisited: {
+        type: Date,
+        default: null,
+    },
+    curStreak: {
+        type: Number,
+        default: 0,
+    },
+    prevBestStreak: {
+        type: Number,
+        default: 0,
+    }
 }, {
     timestamps: true,
 });
